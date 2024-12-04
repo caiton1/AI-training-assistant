@@ -11,11 +11,6 @@ const messageSchema = new mongoose.Schema({
     enum: ['user', 'bot'],
     required: true
   },
-  replyTo: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Message', // references another Message if it's a reply
-    default: null
-  },
   timestamp: {
     type: Date,
     default: Date.now
@@ -27,6 +22,13 @@ const chatSchema = new mongoose.Schema({
   privateID: {
     type: String,
     unique: true,
+    required: true
+  },
+  personality: {
+    type: String,
+  },
+  control: {
+    type: Boolean,
     required: true
   },
   messages: [messageSchema]

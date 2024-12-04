@@ -1,63 +1,64 @@
-import express from 'express';
-const { Configuration, OpenAIApi } = require('openai');
-const mongoose = require('mongoose');
-const Message = require('./models/Message'); // Assuming Message schema is defined here
+import { OpenAI } from 'openai';
+import dotenv from "dotenv";
+dotenv.config();
 
-const app = express();
-app.use(express.json());
-
-// OpenAI API configuration
-const configuration = new Configuration({
-    apiKey: process.env.OPENAI_API_KEY,
+// Initialize OpenAI client
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY
 });
-const openai = new OpenAIApi(configuration);
 
-// Personality configurations
-const personalities = {
-    visual: "You are a patient and illustrative tutor who explains concepts using visuals and metaphors.",
-    auditory: "You are a friendly conversational teacher who explains concepts in a clear and spoken format.",
-    kinesthetic: "You are a hands-on mentor who gives step-by-step guidance with actionable instructions.",
-};
+/**
+ * Sends a message to OpenAI ChatGPT with a specific personality context
+ * @param {string} personality - The personality/system prompt for the AI
+ * @param {string} userMessage - The message from the user
+ * @param {Array} messageHistory - Optional previous messages for context
+ * @param {Object} options - Optional parameters for the API call
+ * @returns {Promise<string>} The AI's response
+ */
+async function sendMessage(
+  personality,
+  userMessage,
+  messageHistory = [],
+  options = {
+    model: "gpt-3.5-turbo",
+    temperature: 0.7,
+    max_tokens: 150
+  }
+) {
+  try {
+    // Construct messages array with personality as system message
+    const messages = [
+      {
+        role: "system",
+        content: personality
+      }
+    ];
 
-// Endpoint for chatbot response
-app.post('/chat', async (req, res) => {
-    const { userMessage, learningStyle } = req.body;
-
-    // Choose personality based on user's learning style
-    const personality = personalities[learningStyle] || personalities.visual;
-
-    try {
-        // Compose the prompt
-        const prompt = `${personality}\nUser: ${userMessage}\nBot:`;
-
-        // OpenAI API call
-        const response = await openai.createChatCompletion({
-            model: 'gpt-4',
-            messages: [{ role: 'user', content: prompt }],
-        });
-
-        const botMessage = response.data.choices[0].message.content;
-
-        // Save conversation to MongoDB
-        const message = new Message({
-            userMessage,
-            botMessage,
-            learningStyle,
-            timestamp: new Date(),
-        });
-        await message.save();
-
-        // Send response back to the client
-        res.json({ botMessage });
-    } catch (error) {
-        console.error('Error:', error);
-        res.status(500).json({ error: 'Failed to generate response' });
+    // Add message history if provided
+    if (messageHistory.length > 0) {
+      messages.push(...messageHistory);
     }
-});
 
-mongoose.connect(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
-    .then(() => app.listen(3000, () => console.log('Server running on port 3000')))
-    .catch(error => console.error('MongoDB connection error:', error));
+    // Add the current user message
+    messages.push({
+      role: "user",
+      content: userMessage
+    });
 
+    // Get completion from OpenAI
+    const completion = await openai.chat.completions.create({
+      model: options.model,
+      messages: messages,
+      temperature: options.temperature,
+      max_tokens: options.max_tokens,
+    });
 
-    
+    return completion.choices[0].message.content;
+
+  } catch (error) {
+    console.error('OpenAI API Error:', error);
+    throw new Error(`Failed to get chat response: ${error.message}`);
+  }
+}
+
+export {sendMessage};
