@@ -48,7 +48,6 @@ export const chatService = {
 
   // Create new chat with personality from questionnaire
   async createNewChat(privateID, questionnaireAnswers) {
-    console.log(questionnaireAnswers)
     try {
       const response = await apiClient.post('/create', {
         privateID,
@@ -71,12 +70,18 @@ export const chatService = {
         privateID,
         userMessage: message
       });
-
       return {
         success: response.data.status === 'success',
         message: response.data.message
       };
     } catch (error) {
+      console.log(error);
+      if (error.status === 429){
+        return{
+          success: 'success',
+          message: 'Too many requests from this IP, please try again later.'
+        }
+      }
       throw new Error('Error sending message: ' + error.message);
     }
   }

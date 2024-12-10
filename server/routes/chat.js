@@ -1,6 +1,20 @@
 import express from 'express';
 var router = express.Router();
-import { handleChat, createChatWithPersonality, getChatHistory } from '../controller/chatController.js'
+import { handleChat, createChatWithPersonality, getChatHistory } from '../controller/chatController.js';
+import { rateLimit } from 'express-rate-limit';
+
+
+// Create a rate limiter (100 requests per 15 minutes per IP)
+const limiter = rateLimit({
+  windowMs:  24 * 60 * 60 * 1000, // 1 day <- 1 hour <- 1 min <- 1 sec
+  max: 100, // Limit each IP to 100 requests per windowMs
+  message: {
+    status: 'error',
+    message: 'Too many requests from this IP, please try again later.'
+  },
+  standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
+  legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+});
 
 router.get('/history', async (req, res) => {
   const { privateID, limit = 50, lastMessageTimestamp, lastMessageId } = req.query;
@@ -30,7 +44,7 @@ router.get('/history', async (req, res) => {
 });
 
 // POST route to handle chat with a message
-router.post('/', async function(req, res, next) {
+router.post('/', limiter, async function(req, res, next) {
   const { privateID, userMessage } = req.body; // Make sure the data is in the body of the request
 
   if (!privateID || !userMessage) {
