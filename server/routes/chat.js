@@ -43,13 +43,14 @@ router.post('/', async function(req, res, next) {
 
 // POST route to create a new chat with a specific personality
 router.post('/create', async function(req, res, next) {
-  const { privateID, personality } = req.body;  // Expecting the privateID and personality to be in the body
+  const { privateID, questionnaireAnswers } = req.body;  // Expecting the privateID and personality to be in the body
 
-  if (!privateID || !personality) {
+
+  if (!privateID || !questionnaireAnswers) {
     return res.status(400).json({ status: 'error', message: 'privateID and personality are required' });
   }
 
-  const response = await createChatWithPersonality(privateID, personality);
+  const response = await createChatWithPersonality(privateID, questionnaireAnswers);
   res.send(response);
 });
 

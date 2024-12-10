@@ -25,11 +25,13 @@ const chatSchema = new mongoose.Schema({
     required: true
   },
   personality: {
-    type: String,
+    type: [String],
+  },
+  traits: {
+    type: [String]
   },
   control: {
     type: Boolean,
-    required: true
   },
   messages: [messageSchema]
 });
@@ -42,21 +44,38 @@ chatSchema.statics.privateIDExists = async function (privateID) {
 
 // Refined method to retrieve recent messages with pagination for older messages
 chatSchema.methods.getRecentMessages = async function (limit, lastMessageTimestamp = null) {
-  // Define the timestamp filter based on the optional `lastMessageTimestamp` parameter
-  const filter = lastMessageTimestamp
-    ? { privateID: this.privateID, 'messages.timestamp': { $lt: lastMessageTimestamp } }
-    : { privateID: this.privateID };
+  // Define the query conditions
+  const query = { privateID: this.privateID };
+  
+  // If a lastMessageTimestamp is provided, add a condition to get older messages
+  if (lastMessageTimestamp) {
+    query['messages.timestamp'] = { $lt: lastMessageTimestamp };
+  }
 
-  // Query and retrieve only the messages array based on the timestamp filter
+  // Find the chat and sort messages chronologically
   const chat = await this.model('Chat')
-    .findOne(filter)
-    .select({ messages: { $slice: -limit } })
+    .findOne(query)
+    .select({
+      messages: { 
+        $slice: [
+          // If no timestamp, get the last 'limit' messages
+          // Otherwise, get the first 'limit' messages older than the timestamp
+          lastMessageTimestamp ? 0 : -limit, 
+          limit 
+        ]
+      }
+    })
     .exec();
 
-  // Return the most recent messages within the array
-  return chat ? chat.messages : [];
-};
+  // Transform messages to match OpenAI format
+  const transformedMessages = chat ? chat.messages.sort((a, b) => a.timestamp - b.timestamp).map(message => ({
+    content: message.content,
+    role: message.sentBy === 'bot' ? 'assistant' : 'user',
+    timestamp: message.timestamp
+  })) : [];
 
+  return transformedMessages;
+};
 
 
 

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import MarkdownRenderer from './markdown';
 import { Send } from 'lucide-react';
 import { AuthScreen } from './AuthScreen';
 import { chatService } from '../api/apiService';
@@ -142,7 +143,7 @@ const ChatInterface = () => {
                                         : 'bg-gray-800 border border-gray-700 text-gray-100'
                                 } w-full`}
                             >
-                                {message.content}
+                                <MarkdownRenderer content={message.content}/>
                             </div>
                         </div>
                     </div>

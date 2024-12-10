@@ -38,16 +38,15 @@ export const QuestionnaireModal = ({ onComplete }) => {
 
     return (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
-            {/* Increased box size */}
             <div className="bg-gray-800 rounded-xl max-w-3xl w-full p-8 space-y-8">
                 <h2 className="text-xl font-semibold text-gray-100">
                     Customize Your AI Assistant
                 </h2>
+                <h4 className="text-s text-gray-100">I am able to use unfamiliar technology when…</h4>
 
                 <div className="space-y-6">
                     <p className="text-gray-300 whitespace-pre-line">{initialQuestions[currentQuestion].question}</p>
 
-                    {/* Horizontal options with labels */}
                     <div className="flex items-center gap-4">
                         <span className="text-gray-300">Disagree</span>
                         <div className="flex gap-4 justify-center w-full">
