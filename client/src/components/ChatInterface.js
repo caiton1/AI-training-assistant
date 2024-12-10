@@ -58,7 +58,7 @@ const ChatInterface = () => {
             setMessages([{
               id: Date.now(),
               role: 'assistant',
-              content: 'Hello! I\'ve been configured according to your preferences. How can I help you today?'
+              content: 'Hello! How can I help you today?'
             }]);
           } else {
             throw new Error('Failed to create chat session');

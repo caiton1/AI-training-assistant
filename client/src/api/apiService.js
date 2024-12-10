@@ -86,7 +86,6 @@ export const chatService = {
 
 
   // TODO: better implementation, what to decide when answer is 5?
-  // TODO: balence controll and independant variable
   // Process questionnaire answers into personality string
   processQuestionnaireResponses(answers) {
     const personalityMapping = 

@@ -148,7 +148,7 @@ export const AuthScreen = ({ onAuthenticate }) => {
                     </button>
 
                     {isNewId && (
-                        <div className="text-sm text-gray-400 text-center">
+                        <div className="text-xl text-red-600 text-center">
                             ℹ️ Save this ID to access your chat history later
                         </div>
                     )}
